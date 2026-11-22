@@ -197,19 +197,26 @@ sqlite3 data/rylan-hayes.db "select order_number, email, total from orders order
 
 ### Deploying to Vercel with Turso
 
-Vercel's filesystem is ephemeral, so use a hosted database instead of the local file:
+Vercel's filesystem is ephemeral, so use a hosted database instead of the local file.
 
-1. Create a database at [turso.tech](https://turso.tech) (or with the Turso CLI: `turso db create rylan-hayes`).
-2. Copy the database URL and create a token:
+1. **Create the database** at [turso.tech](https://turso.tech) (name it `rylan-hayes`), or with the Turso CLI:
    ```bash
-   turso db show rylan-hayes --url
-   turso db tokens create rylan-hayes
+   turso db create rylan-hayes
+   turso db show rylan-hayes --url     # → TURSO_DATABASE_URL
+   turso db tokens create rylan-hayes  # → TURSO_AUTH_TOKEN
    ```
-3. Add both to Vercel → Project → Settings → Environment Variables:
+   In the dashboard, the URL and a token are under the database's **Overview** and **Settings → Tokens** tabs.
+
+2. **Import the repo into Vercel**: sign in at [vercel.com](https://vercel.com), then **Add New → Project → Import** `c9919145/rylan-hayes-website`. Framework preset: Next.js (auto-detected). Keep the default build command and output directory.
+
+3. **Add environment variables** under Project → Settings → Environment Variables (apply to Production, Preview and Development):
    - `TURSO_DATABASE_URL` — e.g. `libsql://rylan-hayes-<org>.turso.io`
-   - `TURSO_AUTH_TOKEN` — the token from step 2
-   - `NEXT_PUBLIC_SITE_URL` — your production URL
-4. Deploy. On first request the app creates the tables automatically.
+   - `TURSO_AUTH_TOKEN` — the token from step 1
+   - `NEXT_PUBLIC_SITE_URL` — the production domain Vercel assigns (visible in the project overview)
+
+4. **Deploy** (or redeploy after adding variables). Tables are created automatically on the first database request, so there's no migration command to run.
+
+5. **Verify on the live URL**: load `/`, submit the signup at `/sign-up` and the contact form at `/contact`, place a demo order in `/store`, then confirm the success page shows the real order. Check the Turso dashboard's browser/SQL tab to see the new rows. If the tables are empty, confirm the env vars are set for the Production environment and redeploy.
 
 You can also point a local checkout at the hosted database by putting the same variables in `.env.local`.
 
