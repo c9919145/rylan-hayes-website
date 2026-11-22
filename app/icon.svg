@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Rylan Hayes monogram">
+  <rect width="64" height="64" rx="14" fill="#0b0e0f" />
+  <rect x="4.5" y="4.5" width="55" height="55" rx="10.5" fill="none" stroke="#d9a96c" stroke-opacity="0.45" />
+  <path d="M32 13l3.6 11.2 11.4 3.8-11.4 3.8L32 43l-3.6-11.2L17 28l11.4-3.8L32 13z" fill="#d9a96c" />
+  <path d="M22 45.5h20" stroke="#f4ecdd" stroke-width="2.4" stroke-linecap="round" />
+  <path d="M26 50.5h12" stroke="#d9a96c" stroke-width="2.4" stroke-linecap="round" />
+</svg>
