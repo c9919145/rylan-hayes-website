@@ -1,14 +1,39 @@
 import fs from "node:fs";
 import path from "node:path";
-import Database from "better-sqlite3";
+import { createClient, type Client } from "@libsql/client";
 
-const databasePath =
+/**
+ * Database connection.
+ *
+ * - Local development: a SQLite file (`file:` URL) via libSQL's native client.
+ * - Production: a hosted libSQL/Turso database, configured with
+ *   `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`.
+ *
+ * Both modes share the same async API, so route handlers don't care where the
+ * data lives.
+ */
+const localPath =
   process.env.DATABASE_PATH || path.join(process.cwd(), "data", "rylan-hayes.db");
 
-const schema = `
+const url = process.env.TURSO_DATABASE_URL || `file:${localPath}`;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+const isLocalFile = url.startsWith("file:");
+
+if (process.env.VERCEL && !process.env.TURSO_DATABASE_URL) {
+  console.warn(
+    "[db] TURSO_DATABASE_URL is not set. Vercel's filesystem is ephemeral, so " +
+      "database writes will not persist. See README → Deploying to Vercel with Turso.",
+  );
+}
+
+const pragmas = isLocalFile
+  ? `
   PRAGMA journal_mode = WAL;
   PRAGMA foreign_keys = ON;
+`
+  : "";
 
+const schema = `
   CREATE TABLE IF NOT EXISTS subscribers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -65,22 +90,41 @@ const schema = `
 `;
 
 type GlobalWithDb = typeof globalThis & {
-  __rylanHayesDb?: Database.Database;
+  __rylanHayesClient?: Client;
+  __rylanHayesSchema?: Promise<void>;
 };
 
 const globalWithDb = globalThis as GlobalWithDb;
 
-export function getDb() {
-  if (!globalWithDb.__rylanHayesDb) {
-    fs.mkdirSync(path.dirname(databasePath), { recursive: true });
-    const db = new Database(databasePath);
-    db.pragma("journal_mode = WAL");
-    db.pragma("foreign_keys = ON");
-    db.exec(schema);
-    globalWithDb.__rylanHayesDb = db;
+let schemaPromise: Promise<void> | undefined;
+
+/**
+ * Returns a ready-to-query client. The schema is created once per process on
+ * first use (all statements are `IF NOT EXISTS`, so this is safe on every
+ * cold start).
+ */
+export async function getDb(): Promise<Client> {
+  if (!globalWithDb.__rylanHayesClient) {
+    if (isLocalFile) {
+      fs.mkdirSync(path.dirname(localPath), { recursive: true });
+    }
+    globalWithDb.__rylanHayesClient = createClient({ url, authToken });
   }
 
-  return globalWithDb.__rylanHayesDb;
+  const client = globalWithDb.__rylanHayesClient;
+
+  if (!schemaPromise) {
+    schemaPromise = (async () => {
+      if (pragmas) await client.executeMultiple(pragmas);
+      await client.executeMultiple(schema);
+    })().catch((error) => {
+      schemaPromise = undefined;
+      throw error;
+    });
+  }
+
+  await schemaPromise;
+  return client;
 }
 
 export interface SubscriberRow {

@@ -134,61 +134,68 @@ export async function POST(request: Request) {
   const totals = orderTotals(subtotal, shippingMethod);
 
   try {
-    const db = getDb();
+    const db = await getDb();
     let orderNumber = generateOrderNumber();
     let attempts = 0;
-    while (db.prepare("SELECT 1 FROM orders WHERE order_number = ?").get(orderNumber)) {
+    while (
+      (
+        await db.execute({
+          sql: "SELECT 1 FROM orders WHERE order_number = ?",
+          args: [orderNumber],
+        })
+      ).rows.length > 0
+    ) {
       orderNumber = generateOrderNumber();
       attempts += 1;
       if (attempts > 5) throw new Error("Could not allocate an order number");
     }
 
-    const insertOrder = db.prepare(
-      `INSERT INTO orders (
-        order_number, email, first_name, last_name, address1, address2, city, state,
-        postal_code, country, shipping_method, subtotal, shipping, tax, total, status
-      ) VALUES (
-        @order_number, @email, @first_name, @last_name, @address1, @address2, @city, @state,
-        @postal_code, @country, @shipping_method, @subtotal, @shipping, @tax, @total, 'confirmed'
-      )`,
+    // `batch` runs every statement in one transaction, so an order and its
+    // items are written atomically. Order items resolve their order id from the
+    // unique order number, which avoids relying on connection-local last-row ids.
+    await db.batch(
+      [
+        {
+          sql: `INSERT INTO orders (
+                  order_number, email, first_name, last_name, address1, address2, city, state,
+                  postal_code, country, shipping_method, subtotal, shipping, tax, total, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')`,
+          args: [
+            orderNumber,
+            email,
+            firstName,
+            lastName,
+            address1,
+            address2 || null,
+            city,
+            state,
+            postalCode,
+            country,
+            shippingMethod,
+            totals.subtotal,
+            totals.shipping,
+            totals.tax,
+            totals.total,
+          ],
+        },
+        ...items.map((item) => ({
+          sql: `INSERT INTO order_items (
+                  order_id, product_slug, product_name, variant, unit_price, quantity, line_total
+                )
+                SELECT id, ?, ?, ?, ?, ?, ? FROM orders WHERE order_number = ?`,
+          args: [
+            item.slug,
+            item.name,
+            item.variant ?? null,
+            item.unitPrice,
+            item.quantity,
+            item.lineTotal,
+            orderNumber,
+          ],
+        })),
+      ],
+      "write",
     );
-    const insertItem = db.prepare(
-      `INSERT INTO order_items (
-        order_id, product_slug, product_name, variant, unit_price, quantity, line_total
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    );
-
-    db.transaction(() => {
-      const info = insertOrder.run({
-        order_number: orderNumber,
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        address1,
-        address2: address2 || null,
-        city,
-        state,
-        postal_code: postalCode,
-        country,
-        shipping_method: shippingMethod,
-        subtotal: totals.subtotal,
-        shipping: totals.shipping,
-        tax: totals.tax,
-        total: totals.total,
-      });
-      const orderId = Number(info.lastInsertRowid);
-      items.forEach((item) => {
-        insertItem.run(
-          orderId,
-          item.slug,
-          item.name,
-          item.variant ?? null,
-          item.unitPrice,
-          item.quantity,
-          item.lineTotal,
-        );
-      });
-    })();
 
     return NextResponse.json({ ok: true, orderNumber, totals });
   } catch (error) {

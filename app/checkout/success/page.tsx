@@ -29,14 +29,18 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
   let items: OrderItemRow[] = [];
 
   if (orderNumber) {
-    const db = getDb();
-    order = db
-      .prepare("SELECT * FROM orders WHERE order_number = ?")
-      .get(orderNumber) as OrderRow | undefined;
+    const db = await getDb();
+    const orderResult = await db.execute({
+      sql: "SELECT * FROM orders WHERE order_number = ?",
+      args: [orderNumber],
+    });
+    order = orderResult.rows[0] as unknown as OrderRow | undefined;
     if (order) {
-      items = db
-        .prepare("SELECT * FROM order_items WHERE order_id = ? ORDER BY id ASC")
-        .all(order.id) as OrderItemRow[];
+      const itemResult = await db.execute({
+        sql: "SELECT * FROM order_items WHERE order_id = ? ORDER BY id ASC",
+        args: [order.id],
+      });
+      items = itemResult.rows as unknown as OrderItemRow[];
     }
   }
 

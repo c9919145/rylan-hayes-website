@@ -44,10 +44,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const db = getDb();
-    db.prepare(
-      `INSERT INTO messages (name, email, topic, message) VALUES (?, ?, ?, ?)`,
-    ).run(name, email, topic, message);
+    const db = await getDb();
+    await db.execute({
+      sql: `INSERT INTO messages (name, email, topic, message) VALUES (?, ?, ?, ?)`,
+      args: [name, email, topic, message],
+    });
 
     return NextResponse.json({ ok: true });
   } catch (error) {

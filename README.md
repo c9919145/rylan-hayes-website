@@ -32,7 +32,7 @@ Other scripts:
 | `npm run lint`      | Run ESLint                       |
 | `npm run typecheck` | Run TypeScript with no emit      |
 
-The SQLite database is created automatically on first write at `data/rylan-hayes.db`. Override the location with `DATABASE_PATH` (see `.env.example`).
+The database is created automatically on first write at `data/rylan-hayes.db`. Override the local path with `DATABASE_PATH`, or set `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` to use a hosted libSQL database (see `.env.example` and “Deploying to Vercel with Turso”).
 
 ---
 
@@ -62,7 +62,7 @@ Plus `sitemap.xml`, `robots.txt`, web app manifest, favicon, Open Graph image an
 ### Functional features
 
 - **Cart** — React context, persisted to `localStorage`, slide-out drawer plus full cart page, quantity updates, free-shipping threshold, shipping method and tax calculation shared between client and server.
-- **Checkout** — server-authoritative pricing, full validation, order + line items written to SQLite in a transaction, success page reads the real order back from the database.
+- **Checkout** — server-authoritative pricing, full validation, order + line items written atomically, success page reads the real order back from the database.
 - **Newsletter & contact** — validated API routes, honeypot spam trap, records persisted to SQLite.
 - **Video modal** — portal-based YouTube (nocookie) embed, scroll lock, Escape to close, focus handling, category filtering.
 - **Navigation** — fixed header with scroll state, active-route highlighting, announcement bar, accessible mobile overlay menu, cart badge.
@@ -101,7 +101,7 @@ lib/
   videos.ts               Video data (placeholder YouTube IDs documented here)
   products.ts             Store catalog, variants, related products
   cart-math.ts            Shipping, tax, totals (shared client/server)
-  db.ts                   SQLite connection + schema
+  db.ts                   libSQL client + schema (local file or Turso)
   validation.ts           Shared validation helpers
   format.ts, hooks.ts     Formatting and small client hooks
 public/
@@ -177,7 +177,7 @@ Album covers are original SVGs in `components/art/AlbumArt.tsx`; product mockups
 
 ## Database
 
-SQLite via `better-sqlite3`. Schema is created automatically by `lib/db.ts`.
+SQLite through **libSQL** (`@libsql/client`). Locally it reads and writes a SQLite file at `data/rylan-hayes.db`; in production the same code talks to a hosted Turso database when `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` are set. The schema is created automatically by `lib/db.ts` on first use.
 
 | Table | Purpose |
 | ----- | ------- |
@@ -186,7 +186,7 @@ SQLite via `better-sqlite3`. Schema is created automatically by `lib/db.ts`.
 | `order_items` | Line items linked to orders (cascade delete) |
 | `messages` | Contact form submissions |
 
-Money is stored as **integer cents**. The database file and WAL/SHM files are git-ignored.
+Money is stored as **integer cents**. The local database file and WAL/SHM files are git-ignored.
 
 To inspect locally:
 
@@ -194,6 +194,24 @@ To inspect locally:
 sqlite3 data/rylan-hayes.db ".tables"
 sqlite3 data/rylan-hayes.db "select order_number, email, total from orders order by id desc limit 10;"
 ```
+
+### Deploying to Vercel with Turso
+
+Vercel's filesystem is ephemeral, so use a hosted database instead of the local file:
+
+1. Create a database at [turso.tech](https://turso.tech) (or with the Turso CLI: `turso db create rylan-hayes`).
+2. Copy the database URL and create a token:
+   ```bash
+   turso db show rylan-hayes --url
+   turso db tokens create rylan-hayes
+   ```
+3. Add both to Vercel → Project → Settings → Environment Variables:
+   - `TURSO_DATABASE_URL` — e.g. `libsql://rylan-hayes-<org>.turso.io`
+   - `TURSO_AUTH_TOKEN` — the token from step 2
+   - `NEXT_PUBLIC_SITE_URL` — your production URL
+4. Deploy. On first request the app creates the tables automatically.
+
+You can also point a local checkout at the hosted database by putting the same variables in `.env.local`.
 
 ---
 
@@ -221,6 +239,6 @@ Custom component classes are intentionally unlayered so they win over utility cl
 ## Notes
 
 - Internal links use `next/link`; hash links (e.g. `#dates`) use plain anchors.
-- API routes that touch SQLite use `runtime = "nodejs"` and `dynamic = "force-dynamic"`.
+- API routes that touch the database use `runtime = "nodejs"` and `dynamic = "force-dynamic"`.
 - Set `NEXT_PUBLIC_SITE_URL` in production so canonical URLs, Open Graph URLs and the sitemap use the live domain.
-- Deploy on any Node.js host that supports native modules (`better-sqlite3`) and a persistent disk. For serverless platforms, swap SQLite for a hosted database and move writes behind a managed service.
+- Local development uses a SQLite file; serverless hosts (Vercel, Netlify) need the hosted Turso variables above because their filesystem is ephemeral.

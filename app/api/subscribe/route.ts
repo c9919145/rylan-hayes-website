@@ -37,16 +37,17 @@ export async function POST(request: Request) {
   }
 
   try {
-    const db = getDb();
-    db.prepare(
-      `INSERT INTO subscribers (name, email, postal_code, consent, source)
-       VALUES (?, ?, ?, 1, ?)
-       ON CONFLICT(email) DO UPDATE SET
-         name = excluded.name,
-         postal_code = excluded.postal_code,
-         consent = excluded.consent,
-         source = excluded.source`,
-    ).run(name, email, postal || null, source);
+    const db = await getDb();
+    await db.execute({
+      sql: `INSERT INTO subscribers (name, email, postal_code, consent, source)
+            VALUES (?, ?, ?, 1, ?)
+            ON CONFLICT(email) DO UPDATE SET
+              name = excluded.name,
+              postal_code = excluded.postal_code,
+              consent = excluded.consent,
+              source = excluded.source`,
+      args: [name, email, postal || null, source],
+    });
 
     return NextResponse.json({
       ok: true,
