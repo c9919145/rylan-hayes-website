@@ -49,7 +49,7 @@ The database is created automatically on first write at `data/rylan-hayes.db`. O
 | `/about`             | Artist story, quote, timeline, off-stage section |
 | `/sign-up`           | Newsletter / fan club signup |
 | `/store`             | Product grid with category filters |
-| `/store/[slug]`      | Product detail, options, quantity, accordions, related products |
+| `/store/[slug]`      | Product detail, options, quantity, accordions, gallery + zoom on the tracklist tee, related products |
 | `/cart`              | Full cart with quantity controls and order summary |
 | `/checkout`          | Validated contact / shipping / demo payment form |
 | `/checkout/success`  | Real order lookup from the database, demo payment notice |
@@ -161,7 +161,7 @@ Album covers are original SVGs in `components/art/AlbumArt.tsx`; product mockups
 **No real payment is processed and no card data is stored.**
 
 - The checkout form collects card details only to demonstrate validation and UX. It displays a clear on-page demo notice and a “Use demo card” helper (`4242 4242 4242 4242`, `12/30`, `123`).
-- The API route validates the payload, **recomputes all prices from `lib/products.ts` and `lib/cart-math.ts`** (never trusting client totals), and writes the order and line items to SQLite.
+- The API route validates the payload, **recomputes all prices from `lib/products.ts` and `lib/cart-math.ts`** (never trusting client totals), and writes the order and line items to the database.
 - The success page looks the order up by order number and shows a demo notice instead of a payment confirmation.
 - **No transactional email is sent.** The demo records signups, messages and orders in SQLite but does not send receipts or shipping notifications. Wire up an email provider (e.g. Resend, Postmark, SES) before launch.
 

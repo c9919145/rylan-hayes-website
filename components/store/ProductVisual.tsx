@@ -1,7 +1,10 @@
 import Image from "next/image";
 import type { ProductVisual as Visual } from "@/lib/products";
+import { featuredAlbum } from "@/lib/music";
 import { AlbumArt } from "@/components/art/AlbumArt";
 import { cn } from "@/lib/format";
+
+export type ProductVisualView = "front" | "back" | "detail";
 
 interface ProductVisualProps {
   visual: Visual;
@@ -9,6 +12,8 @@ interface ProductVisualProps {
   className?: string;
   /** Unique prefix for SVG IDs when the same visual renders more than once. */
   uid?: string;
+  /** Optional alternate angle for visuals with a multi-image gallery. */
+  view?: ProductVisualView;
 }
 
 function Scene({
@@ -102,6 +107,124 @@ function Tee({ lyric = false, name, uid }: { lyric?: boolean; name: string; uid:
         )}
       </svg>
       <span className="sr-only">{name}</span>
+    </Scene>
+  );
+}
+
+function TracklistTee({
+  name,
+  uid,
+  view = "front",
+}: {
+  name: string;
+  uid: string;
+  view?: ProductVisualView;
+}) {
+  const prefix = `${uid}-tracklist-${view}`;
+  const tracks = featuredAlbum.tracks ?? [];
+  const columns = [tracks.slice(0, 6), tracks.slice(6, 12)];
+
+  return (
+    <Scene tone="cream">
+      {view === "detail" ? (
+        <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full p-[6%]">
+          <defs>
+            <linearGradient id={`${prefix}-fabric`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#4b4440" />
+              <stop offset="1" stopColor="#2e2927" />
+            </linearGradient>
+            <pattern id={`${prefix}-weave`} width="6" height="6" patternUnits="userSpaceOnUse">
+              <path d="M0 6 6 0M-1 1 1 -1M5 7 7 5" stroke="#ffffff" strokeOpacity="0.035" strokeWidth="1" />
+            </pattern>
+          </defs>
+          <rect
+            x="46"
+            y="46"
+            width="308"
+            height="308"
+            fill={`url(#${prefix}-fabric)`}
+            stroke="#615851"
+            strokeWidth="2"
+            transform="rotate(-3 200 200)"
+          />
+          <rect
+            x="46"
+            y="46"
+            width="308"
+            height="308"
+            fill={`url(#${prefix}-weave)`}
+            transform="rotate(-3 200 200)"
+          />
+          <g fill="#f4ecdd" textAnchor="middle" transform="rotate(-3 200 200)">
+            <text x="200" y="152" fontSize="9" letterSpacing="5" opacity="0.7" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
+              THE TWELVE SONGS
+            </text>
+            <text x="200" y="196" fontSize="29" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>
+              Neon Porch
+            </text>
+            <text x="200" y="228" fontSize="29" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>
+              Lights
+            </text>
+          </g>
+          <path d="M120 252h160" stroke="#d9a96c" strokeWidth="1.5" transform="rotate(-3 200 200)" />
+          <g fill="#e8d8c4" transform="rotate(-3 200 200)" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
+            <text x="132" y="282" fontSize="9" letterSpacing="2">01  NEON PORCH LIGHTS</text>
+            <text x="132" y="303" fontSize="9" letterSpacing="2">02  WHISKEY WEATHER</text>
+            <text x="132" y="324" fontSize="9" letterSpacing="2">03  COUNTY LINE</text>
+          </g>
+        </svg>
+      ) : (
+        <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full p-[8%]">
+          <defs>
+            <linearGradient id={`${prefix}-fabric`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#4b4440" />
+              <stop offset="1" stopColor="#2e2927" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M137 56 91 78 52 128l42 34 26-20-8 172c0 10 8 18 18 18h150c10 0 18-8 18-18l-8-172 26 20 42-34-39-50-46-22c-8 18-25 30-45 30s-37-12-45-30Z"
+            fill={`url(#${prefix}-fabric)`}
+            stroke="#645b55"
+            strokeWidth="2"
+          />
+          <path d="M155 60c6 16 25 26 45 26s39-10 45-26" fill="none" stroke="#645b55" strokeWidth="2" />
+          {view === "front" ? (
+            <g fill="#f4ecdd" textAnchor="middle" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
+              <rect x="162" y="160" width="76" height="52" fill="none" stroke="#d9a96c" strokeOpacity="0.6" />
+              <text x="200" y="181" fontSize="9" letterSpacing="2.5">RYLAN</text>
+              <text x="200" y="196" fontSize="9" letterSpacing="2.5">HAYES</text>
+              <text x="200" y="207" fontSize="5" letterSpacing="2" opacity="0.7">EST. NASHVILLE</text>
+            </g>
+          ) : (
+            <g fill="#f4ecdd" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
+              <text x="200" y="120" fontSize="10" letterSpacing="2.5" textAnchor="middle">NEON PORCH LIGHTS</text>
+              <path d="M130 130h140" stroke="#d9a96c" strokeWidth="1" />
+              {columns.map((column, columnIndex) => {
+                const x = columnIndex === 0 ? 118 : 226;
+                return (
+                  <g key={x}>
+                    {column.map((track) => (
+                      <g key={track.number}>
+                        <text x={x} y={148 + (track.number - (columnIndex === 0 ? 0 : 6)) * 23} fontSize="7.5" textAnchor="end" opacity="0.6">
+                          {String(track.number).padStart(2, "0")}
+                        </text>
+                        <text x={x + 8} y={148 + (track.number - (columnIndex === 0 ? 0 : 6)) * 23} fontSize="8">
+                          {track.title.toUpperCase()}
+                        </text>
+                      </g>
+                    ))}
+                  </g>
+                );
+              })}
+              <path d="M130 298h140" stroke="#d9a96c" strokeWidth="1" />
+              <text x="200" y="313" fontSize="6.5" letterSpacing="2" textAnchor="middle" opacity="0.7">
+                2026 WORLD TOUR · SIDE B
+              </text>
+            </g>
+          )}
+        </svg>
+      )}
+      <span className="sr-only">{name}{view !== "front" ? ` — ${view} view` : ""}</span>
     </Scene>
   );
 }
@@ -256,7 +379,7 @@ function Photo({ name }: { name: string }) {
   );
 }
 
-export function ProductVisual({ visual, name, className, uid }: ProductVisualProps) {
+export function ProductVisual({ visual, name, className, uid, view = "front" }: ProductVisualProps) {
   const prefix = uid ?? visual;
   const inner =
     visual === "vinyl-neon" ? <Vinyl art="neon" name={name} uid={prefix} /> :
@@ -265,6 +388,7 @@ export function ProductVisual({ visual, name, className, uid }: ProductVisualPro
     visual === "cd" ? <Cd name={name} uid={prefix} /> :
     visual === "tee" ? <Tee name={name} uid={prefix} /> :
     visual === "lyric-tee" ? <Tee lyric name={name} uid={prefix} /> :
+    visual === "tracklist-tee" ? <TracklistTee name={name} uid={prefix} view={view} /> :
     visual === "hoodie" ? <Hoodie name={name} uid={prefix} /> :
     visual === "hat" ? <Hat name={name} uid={prefix} /> :
     visual === "poster" ? <Poster name={name} uid={prefix} /> :

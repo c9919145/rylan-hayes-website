@@ -7,6 +7,7 @@ export type ProductVisual =
   | "cd"
   | "tee"
   | "lyric-tee"
+  | "tracklist-tee"
   | "hoodie"
   | "hat"
   | "poster"
@@ -99,6 +100,29 @@ export const products: Product[] = [
       label: "Size",
       options: ["S", "M", "L", "XL", "XXL"],
       defaultValue: "M",
+    },
+  },
+  {
+    slug: "tracklist-tee",
+    name: "Neon Porch Lights Tracklist Tee",
+    price: 4000,
+    category: "Apparel",
+    visual: "tracklist-tee",
+    shortDescription: "Limited-edition pepper tee with front and back prints.",
+    description:
+      "A limited run of the Neon Porch Lights tracklist tee in a washed pepper colorway. The front carries a small chest mark; the back lists all twelve songs from the album in order. Printed with soft-hand ink on a heavyweight cotton blank.",
+    details: [
+      "100% heavyweight cotton, 220 gsm",
+      "Washed pepper colorway",
+      "Front and back screen print",
+      "Relaxed unisex fit",
+      "Printed in Nashville",
+    ],
+    badge: "Limited edition",
+    variant: {
+      label: "Size",
+      options: ["SMALL", "MEDIUM", "LARGE", "X-LARGE", "2X-LARGE", "3X-LARGE"],
+      defaultValue: "MEDIUM",
     },
   },
   {

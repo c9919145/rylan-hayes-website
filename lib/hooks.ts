@@ -55,9 +55,16 @@ export function useFocusTrap(
         (element) => element.getClientRects().length > 0,
       );
 
-    const timer = window.setTimeout(() => {
+    // Overlays often fade/transition into view. `focus()` is ignored while an
+    // element is still `visibility: hidden`, so retry briefly until it lands.
+    let attempts = 0;
+    const timer = window.setInterval(() => {
       const target = initialFocusRef?.current ?? focusable()[0];
-      target?.focus();
+      if (target?.getClientRects().length) target.focus();
+      attempts += 1;
+      if (container.contains(document.activeElement) || attempts >= 12) {
+        window.clearInterval(timer);
+      }
     }, 40);
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -77,7 +84,7 @@ export function useFocusTrap(
 
     container.addEventListener("keydown", onKeyDown);
     return () => {
-      window.clearTimeout(timer);
+      window.clearInterval(timer);
       container.removeEventListener("keydown", onKeyDown);
       previouslyFocused?.focus();
     };
