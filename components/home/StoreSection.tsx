@@ -5,7 +5,7 @@ import { Icon } from "@/components/ui/Icon";
 import { ProductCard } from "@/components/store/ProductCard";
 import { productBySlug } from "@/lib/products";
 
-const picks = ["neon-porch-lights-vinyl", "neon-porch-lights-tee", "porch-light-poster"]
+const picks = ["tracklist-tee", "neon-porch-lights-vinyl", "porch-light-poster"]
   .map((slug) => productBySlug(slug))
   .filter((product): product is NonNullable<typeof product> => Boolean(product));
 
