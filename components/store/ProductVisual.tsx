@@ -120,107 +120,159 @@ function TracklistTee({
   uid: string;
   view?: ProductVisualView;
 }) {
-  const prefix = `${uid}-tracklist-${view}`;
+  const p = `${uid}-tracklist-${view}`;
   const tracks = featuredAlbum.tracks ?? [];
   const columns = [tracks.slice(0, 6), tracks.slice(6, 12)];
+  const teePath =
+    "M137 56 91 78 52 128l42 34 26-20-8 172c0 10 8 18 18 18h150c10 0 18-8 18-18l-8-172 26 20 42-34-39-50-46-22c-8 18-25 30-45 30s-37-12-45-30Z";
+
+  const defs = (
+    <defs>
+      <linearGradient id={`${p}-body`} x1="0" y1="0" x2="0.8" y2="1">
+        <stop offset="0" stopColor="#5c524a" />
+        <stop offset="0.5" stopColor="#3b3531" />
+        <stop offset="1" stopColor="#282320" />
+      </linearGradient>
+      <radialGradient id={`${p}-sheen`} cx="40%" cy="22%" r="75%">
+        <stop offset="0" stopColor="#ffffff" stopOpacity="0.16" />
+        <stop offset="0.55" stopColor="#ffffff" stopOpacity="0.02" />
+        <stop offset="1" stopColor="#000000" stopOpacity="0.2" />
+      </radialGradient>
+      <pattern id={`${p}-grain`} width="5" height="5" patternUnits="userSpaceOnUse">
+        <circle cx="1" cy="1" r="0.5" fill="#ffffff" opacity="0.055" />
+        <circle cx="3.5" cy="3.2" r="0.45" fill="#000000" opacity="0.08" />
+      </pattern>
+      <filter id={`${p}-shadow`} x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="9" />
+      </filter>
+    </defs>
+  );
+
+  const shirtBase = (
+    <>
+      <ellipse cx="200" cy="352" rx="98" ry="12" fill="#000000" opacity="0.22" filter={`url(#${p}-shadow)`} />
+      <path d={teePath} fill={`url(#${p}-body)`} stroke="#6b6058" strokeWidth="1.6" />
+      <path d={teePath} fill={`url(#${p}-sheen)`} />
+      <path d={teePath} fill={`url(#${p}-grain)`} />
+      <path d="M91 78 52 128l42 34 26-20-29-64Z" fill="#151211" opacity="0.22" />
+      <path d="M309 78 348 128l-42 34-26-20 29-64Z" fill="#151211" opacity="0.24" />
+      <path d="M137 56 91 78M263 56l46 22" stroke="#7b6f65" strokeWidth="1.4" opacity="0.35" fill="none" />
+      <path d="M112 312h176" stroke="#171413" strokeWidth="3" opacity="0.5" />
+      <path d="M112 318h176" stroke="#7b6f65" strokeWidth="1" opacity="0.3" />
+      <path d="M155 60c6 16 25 26 45 26s39-10 45-26" fill="none" stroke="#6b6058" strokeWidth="3.5" />
+      <path
+        d="M158 63c7 13 24 22 42 22s35-9 42-22"
+        fill="none"
+        stroke="#241f1d"
+        strokeWidth="1.4"
+        strokeDasharray="2 2"
+        opacity="0.7"
+      />
+      <path
+        d="M124 178c14 7 24 6 34 1M276 186c-12 6-22 6-31 1M130 264c12-6 22-7 31-3M270 272c-10-5-19-5-28-2"
+        fill="none"
+        stroke="#0f0d0c"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.16"
+      />
+    </>
+  );
+
+  const backPrint = (
+    <g fill="#f4ecdd" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
+      <text x="200" y="117" fontSize="11" letterSpacing="2.2" textAnchor="middle">
+        NEON PORCH LIGHTS
+      </text>
+      <path d="M128 127h144" stroke="#d9a96c" strokeWidth="1.2" />
+      <text x="200" y="139" fontSize="6" letterSpacing="3" textAnchor="middle" opacity="0.65">
+        THE TRACKLIST · 2026
+      </text>
+      {columns.map((column, columnIndex) => {
+        const x = columnIndex === 0 ? 118 : 226;
+        return (
+          <g key={x}>
+            {column.map((track) => {
+              const y = 158 + (columnIndex === 0 ? track.number - 1 : track.number - 7) * 23;
+              return (
+                <g key={track.number}>
+                  <text x={x} y={y} fontSize="7.5" textAnchor="end" opacity="0.6">
+                    {String(track.number).padStart(2, "0")}
+                  </text>
+                  <text x={x + 8} y={y} fontSize="8">
+                    {track.title.toUpperCase()}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        );
+      })}
+      <path d="M128 296h144" stroke="#d9a96c" strokeWidth="1.2" />
+      <text x="200" y="311" fontSize="6.5" letterSpacing="2" textAnchor="middle" opacity="0.72">
+        RYLAN HAYES · NASHVILLE, TN
+      </text>
+    </g>
+  );
 
   return (
     <Scene tone="cream">
       {view === "detail" ? (
         <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full p-[6%]">
           <defs>
-            <linearGradient id={`${prefix}-fabric`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#4b4440" />
-              <stop offset="1" stopColor="#2e2927" />
+            <linearGradient id={`${p}-fabric`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#5d534b" />
+              <stop offset="1" stopColor="#2e2926" />
             </linearGradient>
-            <pattern id={`${prefix}-weave`} width="6" height="6" patternUnits="userSpaceOnUse">
-              <path d="M0 6 6 0M-1 1 1 -1M5 7 7 5" stroke="#ffffff" strokeOpacity="0.035" strokeWidth="1" />
+            <pattern id={`${p}-weave`} width="7" height="7" patternUnits="userSpaceOnUse">
+              <path d="M0 7 7 0M-2 2 2 -2M5 9 9 5" stroke="#ffffff" strokeOpacity="0.045" strokeWidth="1.2" />
+              <path d="M0 3.5h7M3.5 0v7" stroke="#000000" strokeOpacity="0.05" strokeWidth="0.7" />
             </pattern>
           </defs>
-          <rect
-            x="46"
-            y="46"
-            width="308"
-            height="308"
-            fill={`url(#${prefix}-fabric)`}
-            stroke="#615851"
-            strokeWidth="2"
-            transform="rotate(-3 200 200)"
-          />
-          <rect
-            x="46"
-            y="46"
-            width="308"
-            height="308"
-            fill={`url(#${prefix}-weave)`}
-            transform="rotate(-3 200 200)"
-          />
-          <g fill="#f4ecdd" textAnchor="middle" transform="rotate(-3 200 200)">
-            <text x="200" y="152" fontSize="9" letterSpacing="5" opacity="0.7" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
-              THE TWELVE SONGS
-            </text>
-            <text x="200" y="196" fontSize="29" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>
-              Neon Porch
-            </text>
-            <text x="200" y="228" fontSize="29" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>
-              Lights
-            </text>
-          </g>
-          <path d="M120 252h160" stroke="#d9a96c" strokeWidth="1.5" transform="rotate(-3 200 200)" />
-          <g fill="#e8d8c4" transform="rotate(-3 200 200)" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
-            <text x="132" y="282" fontSize="9" letterSpacing="2">01  NEON PORCH LIGHTS</text>
-            <text x="132" y="303" fontSize="9" letterSpacing="2">02  WHISKEY WEATHER</text>
-            <text x="132" y="324" fontSize="9" letterSpacing="2">03  COUNTY LINE</text>
+          <g transform="rotate(-3 200 200)">
+            <rect x="44" y="44" width="312" height="312" fill={`url(#${p}-fabric)`} stroke="#6b6058" strokeWidth="2" />
+            <rect x="44" y="44" width="312" height="312" fill={`url(#${p}-weave)`} />
+            <rect x="52" y="52" width="296" height="296" fill="none" stroke="#f4ecdd" strokeOpacity="0.12" strokeDasharray="3 4" />
+            <path d="M44 300 356 260v96H44Z" fill="#191514" opacity="0.32" />
+            <path d="M44 300 356 260" stroke="#8a7d70" strokeWidth="1.5" opacity="0.55" />
+            <g fill="#f4ecdd" textAnchor="middle">
+              <text x="200" y="129" fontSize="9" letterSpacing="5" opacity="0.72" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
+                THE TWELVE SONGS
+              </text>
+              <text x="200" y="179" fontSize="33" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>
+                Neon Porch
+              </text>
+              <text x="200" y="217" fontSize="33" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>
+                Lights
+              </text>
+            </g>
+            <path d="M110 238h180" stroke="#d9a96c" strokeWidth="1.5" />
+            <g fill="#e9d9c5" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
+              <text x="126" y="270" fontSize="10" letterSpacing="2">01  NEON PORCH LIGHTS</text>
+              <text x="126" y="293" fontSize="10" letterSpacing="2">02  WHISKEY WEATHER</text>
+              <text x="126" y="316" fontSize="10" letterSpacing="2">03  COUNTY LINE</text>
+            </g>
           </g>
         </svg>
       ) : (
         <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full p-[8%]">
-          <defs>
-            <linearGradient id={`${prefix}-fabric`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#4b4440" />
-              <stop offset="1" stopColor="#2e2927" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M137 56 91 78 52 128l42 34 26-20-8 172c0 10 8 18 18 18h150c10 0 18-8 18-18l-8-172 26 20 42-34-39-50-46-22c-8 18-25 30-45 30s-37-12-45-30Z"
-            fill={`url(#${prefix}-fabric)`}
-            stroke="#645b55"
-            strokeWidth="2"
-          />
-          <path d="M155 60c6 16 25 26 45 26s39-10 45-26" fill="none" stroke="#645b55" strokeWidth="2" />
+          {defs}
+          {shirtBase}
           {view === "front" ? (
-            <g fill="#f4ecdd" textAnchor="middle" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
-              <rect x="162" y="160" width="76" height="52" fill="none" stroke="#d9a96c" strokeOpacity="0.6" />
-              <text x="200" y="181" fontSize="9" letterSpacing="2.5">RYLAN</text>
-              <text x="200" y="196" fontSize="9" letterSpacing="2.5">HAYES</text>
-              <text x="200" y="207" fontSize="5" letterSpacing="2" opacity="0.7">EST. NASHVILLE</text>
+            <g textAnchor="middle" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
+              <rect x="160" y="158" width="80" height="60" fill="none" stroke="#d9a96c" strokeOpacity="0.7" />
+              <rect x="163" y="161" width="74" height="54" fill="none" stroke="#f4ecdd" strokeOpacity="0.16" />
+              <circle cx="200" cy="174" r="4.5" fill="#d9a96c" opacity="0.9" />
+              <path d="M196 174h8M200 170v8" stroke="#2b2522" strokeWidth="0.9" />
+              <text x="200" y="193" fontSize="10" letterSpacing="2.4" fill="#f4ecdd">RYLAN</text>
+              <text x="200" y="206" fontSize="10" letterSpacing="2.4" fill="#f4ecdd">HAYES</text>
+              <text x="200" y="213" fontSize="4.6" letterSpacing="1.8" fill="#d9a96c">NEON PORCH LIGHTS</text>
             </g>
           ) : (
-            <g fill="#f4ecdd" style={{ fontFamily: "var(--font-barlow), sans-serif" }}>
-              <text x="200" y="120" fontSize="10" letterSpacing="2.5" textAnchor="middle">NEON PORCH LIGHTS</text>
-              <path d="M130 130h140" stroke="#d9a96c" strokeWidth="1" />
-              {columns.map((column, columnIndex) => {
-                const x = columnIndex === 0 ? 118 : 226;
-                return (
-                  <g key={x}>
-                    {column.map((track) => (
-                      <g key={track.number}>
-                        <text x={x} y={148 + (track.number - (columnIndex === 0 ? 0 : 6)) * 23} fontSize="7.5" textAnchor="end" opacity="0.6">
-                          {String(track.number).padStart(2, "0")}
-                        </text>
-                        <text x={x + 8} y={148 + (track.number - (columnIndex === 0 ? 0 : 6)) * 23} fontSize="8">
-                          {track.title.toUpperCase()}
-                        </text>
-                      </g>
-                    ))}
-                  </g>
-                );
-              })}
-              <path d="M130 298h140" stroke="#d9a96c" strokeWidth="1" />
-              <text x="200" y="313" fontSize="6.5" letterSpacing="2" textAnchor="middle" opacity="0.7">
-                2026 WORLD TOUR · SIDE B
-              </text>
-            </g>
+            <>
+              {backPrint}
+              <rect x="120" y="112" width="160" height="202" fill={`url(#${p}-grain)`} opacity="0.5" />
+            </>
           )}
         </svg>
       )}
